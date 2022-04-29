@@ -1,37 +1,50 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { deleteContacts } from 'redux/contacts/contacts-actions';
-import { getContacts, getFilter } from 'redux/contacts/selectors';
+import { useSelector } from 'react-redux';
+import { getFilter } from 'redux/contacts/selectors';
+import {
+  useGetContactsQuery,
+  useDeleteContactsMutation,
+} from 'redux/contacts/contacts-api';
 import {
   ContactsListStyle,
   ContactsItem,
   ContactsItemText,
-  ContactsBtn,
+  DeleteBtn,
 } from './ContactsList.styled';
+import Spinner from 'components/Spinner/Spinner';
 
 export default function ContactsList() {
-  const dispatch = useDispatch();
-  const contacts = useSelector(getContacts);
+  const [deleteContacts, { isLoading: isDeleting }] =
+    useDeleteContactsMutation();
   const filter = useSelector(getFilter);
   const normalizeFilter = filter.toLowerCase();
-  const visibleContacts = contacts.filter(contact =>
+  const { data, error, isFetching } = useGetContactsQuery({
+    skip: filter === '',
+  });
+
+  const visibleContacts = data?.filter(contact =>
     contact.name.toLowerCase().includes(normalizeFilter)
   );
 
   return (
     <>
       <ContactsListStyle>
-        {visibleContacts.map(({ id, name, number }) => {
+        {isFetching && <Spinner />}
+        {visibleContacts?.map(({ id, name, phone }) => {
           return (
             <ContactsItem key={id}>
               <ContactsItemText>
-                {name}: {number}
+                {name}: {phone}
               </ContactsItemText>
-              <ContactsBtn onClick={() => dispatch(deleteContacts(id))}>
+              <DeleteBtn
+                onClick={() => deleteContacts(id)}
+                disabled={isDeleting}
+              >
                 Delete
-              </ContactsBtn>
+              </DeleteBtn>
             </ContactsItem>
           );
         })}
+        {error && <div> Sorry, contacts not found :( </div>}
       </ContactsListStyle>
     </>
   );

@@ -24,7 +24,7 @@ export const ContactsItemText = styled.p`
   line-height: 36px;
   margin: 0;
 `;
-export const ContactsBtn = styled.button`
+export const DeleteBtn = styled.button`
   width: 100px;
   height: 30px;
   background-color: ${props => props.theme.colors.red};

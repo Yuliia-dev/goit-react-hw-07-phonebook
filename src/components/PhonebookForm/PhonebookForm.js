@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { addContacts } from 'redux/contacts/contacts-actions';
-import { nanoid } from 'nanoid';
-import Swal from 'sweetalert2';
-import { getContacts } from 'redux/contacts/selectors';
+import { ToastContainer, toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
+import {
+  useAddContactMutation,
+  useGetContactsQuery,
+} from 'redux/contacts/contacts-api';
 import {
   FormContact,
   LabelFormContact,
@@ -14,31 +16,32 @@ import {
 
 export default function PhonebookForm() {
   const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-  const contacts = useSelector(getContacts);
-  const dispatch = useDispatch();
+  const [phone, setPhone] = useState('');
+
+  const { data } = useGetContactsQuery();
+
+  const [addContact] = useAddContactMutation();
 
   const submitForm = e => {
     e.preventDefault();
-    const id = nanoid();
-    contacts.find(contact => contact.name.toLowerCase() === name)
-      ? Swal.fire({
-          icon: 'warning',
-          title: 'Oops...',
-          text: `The name "${name}" is already in the list`,
+    data.find(contact => contact.name.toLowerCase() === name.toLowerCase())
+      ? toast.error(`The name "${name}" is already in the list`, {
+          position: 'top-center',
+          autoClose: 5000,
         })
-      : dispatch(addContacts(id, name, number));
+      : addContact({ name, phone });
 
     reset();
   };
 
   const reset = () => {
     setName('');
-    setNumber('');
+    setPhone('');
   };
 
   return (
     <>
+      <ToastContainer position="top-center" />
       <FormContact autoComplete="off" onSubmit={submitForm}>
         <LabelFormContact>
           <TextFormContact>Name</TextFormContact>
@@ -58,9 +61,9 @@ export default function PhonebookForm() {
           <InputFormContact
             placeholder="Enter a number"
             type="tel"
-            name="number"
-            value={number}
-            onChange={e => setNumber(e.target.value)}
+            name="phone"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
             pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
             title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
             required
